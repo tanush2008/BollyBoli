@@ -3,7 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
     <title>BollyBoli – Bollywood Dialogue Quiz Game</title>
+
+    <!-- SEO -->
+    <meta name="description" content="BollyBoli is a fast-paced Bollywood dialogue quiz game. Guess the movie from iconic lines, race against the timer, and see how filmy you really are.">
+    <meta name="keywords" content="Bollywood quiz, movie dialogue quiz, Hindi movies, BollyBoli game, Bollywood game online">
+    <meta name="author" content="Tanush">
+    <meta property="og:title" content="BollyBoli – Bollywood Dialogue Quiz Game">
+    <meta property="og:description" content="Can you guess the Bollywood movie from a single dialogue? Play BollyBoli now and test your filmy IQ.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="">
+    <meta property="og:image" content="">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;500;700&family=Montserrat:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
@@ -164,6 +176,18 @@
              0% { transform: scale(0.8); opacity: 0; }
              100% { transform: scale(1); opacity: 1; }
         }
+
+        .play-again-anim {
+            animation: playAgainPulse 0.6s ease-out;
+        }
+        @keyframes playAgainPulse {
+            0% { transform: scale(0.9); opacity: 0.6; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .heart {
+            filter: drop-shadow(0 0 6px rgba(248, 113, 113, 0.8));
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6">
@@ -175,16 +199,21 @@
 
     <!-- Main Game Interface -->
     <div class="w-full max-w-4xl relative z-10">
-        <div class="glass-panel p-6 md:p-12 min-h-[620px] flex flex-col relative overflow-hidden">
+        <div id="main-panel" class="glass-panel p-6 md:p-12 min-h-[620px] flex flex-col relative overflow-hidden">
             
             <!-- Header -->
-            <div class="flex flex-col items-center justify-center mb-8 z-20">
-                <h1 id="typing-title" class="text-5xl md:text-7xl font-bold tracking-widest gold-text min-h-[1.2em] drop-shadow-2xl"></h1>
+            <header class="flex flex-col items-center justify-center mb-8 z-20 text-center">
+                <h1 id="typing-title" class="text-5xl md:text-7xl font-bold tracking-widest gold-text min-h-[1.2em] drop-shadow-2xl">
+                    <!-- Typing -->
+                </h1>
+                <p class="mt-2 text-sm text-amber-200/70 tracking-[0.25em] uppercase">
+                    Bollywood Dialogue Quiz
+                </p>
                 <div class="h-0.5 w-32 bg-gradient-to-r from-transparent via-red-500 to-transparent mt-2 opacity-80"></div>
-            </div>
+            </header>
 
             <!-- 1. START SCREEN -->
-            <div id="start-screen" class="flex-grow flex flex-col items-center justify-center text-center fade-in-up" style="animation-delay: 0.2s;">
+            <main id="start-screen" class="flex-grow flex flex-col items-center justify-center text-center fade-in-up" style="animation-delay: 0.2s;">
                 <div class="mb-10 relative group cursor-pointer">
                     <div class="absolute inset-0 bg-red-600/40 blur-[60px] rounded-full animate-pulse"></div>
                     <div class="clapper-icon">
@@ -199,33 +228,43 @@
                     <strong class="text-amber-400">Lights. Camera. Action!</strong><br>
                     Test your Bollywood knowledge. Answer fast.
                 </p>
-                <div class="flex flex-wrap gap-4 w-full max-w-lg justify-center mb-10">
-                    <!-- Store buttons removed -->
-                </div>
-                <button id="main-start-btn" onclick="startGame()" class="primary-cta cinematic-font text-3xl px-16 py-6 rounded-full tracking-wider">
+
+                <button id="main-start-btn" onclick="handleMainStart()" class="primary-cta cinematic-font text-3xl px-16 py-6 rounded-full tracking-wider">
                     ENTER THEATRE
                 </button>
-            </div>
+
+                <div class="mt-8 text-xs text-gray-400">
+                    Local device leaderboard is saved on your browser only.
+                </div>
+            </main>
 
             <!-- 2. QUIZ SCREEN -->
-            <div id="quiz-screen" class="hidden w-full flex-col h-full">
-                <div class="flex justify-between items-end mb-8 border-b border-white/10 pb-4">
+            <section id="quiz-screen" class="hidden w-full flex-col h-full" aria-label="Quiz Screen">
+                <div class="flex justify-between items-end mb-8 border-b border-white/10 pb-4 gap-4">
                     <div>
                         <span class="text-amber-500/70 text-xs font-bold uppercase tracking-widest block mb-1">Scene</span>
                         <span id="current-level-name" class="text-2xl text-white cinematic-font drop-shadow-md">Level 1</span>
                     </div>
-                    <div class="text-right">
-                        <span class="text-amber-500/70 text-xs font-bold uppercase tracking-widest block mb-1">Box Office</span>
-                        <div class="bg-black/40 px-4 py-1 rounded border border-amber-500/30">
-                            <span id="score" class="text-2xl text-amber-400 cinematic-font">0</span>
+                    <div class="text-right space-y-2">
+                        <div>
+                            <span class="text-amber-500/70 text-xs font-bold uppercase tracking-widest block mb-1">Box Office</span>
+                            <div class="bg-black/40 px-4 py-1 rounded border border-amber-500/30 inline-block">
+                                <span id="score" class="text-2xl text-amber-400 cinematic-font">0</span>
+                            </div>
+                        </div>
+                        <div>
+                            <span class="text-amber-500/70 text-[10px] font-bold uppercase tracking-widest block mb-1">Lives</span>
+                            <div id="lives-container" class="flex justify-end gap-1 text-xl"></div>
                         </div>
                     </div>
                 </div>
+
                 <div class="timer-track w-full h-2 mb-12 shadow-inner">
                     <div id="timer-bar" class="timer-fill h-full w-full"></div>
                 </div>
+
                 <div id="question-container" class="flex-grow flex flex-col justify-center">
-                    <div class="mb-12 text-center relative">
+                    <div class="mb-12 text-center relative px-2">
                         <span class="absolute -top-6 left-0 text-6xl text-white/10 font-serif">“</span>
                         <h2 id="dialogue-text" class="text-2xl md:text-4xl font-medium leading-snug text-white drop-shadow-lg px-4 md:px-8">
                             <!-- Dialogue goes here -->
@@ -236,7 +275,8 @@
                         <!-- Options injected by JS -->
                     </div>
                 </div>
-                <div class="min-h-[100px] flex flex-col items-center justify-end mt-8">
+
+                <div class="min-h-[120px] flex flex-col items-center justify-end mt-8">
                     <div id="feedback-area" class="text-center cinematic-font text-4xl mb-4 h-10 tracking-widest drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]"></div>
                     <div id="post-answer-actions" class="hidden flex flex-wrap justify-center gap-4 w-full">
                         <button id="sponsor-link" class="bg-blue-900/80 hover:bg-blue-800 text-blue-100 border border-blue-500/50 px-6 py-3 rounded-lg font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-2">
@@ -247,13 +287,14 @@
                         </button>
                     </div>
                 </div>
-            </div>
+            </section>
 
             <!-- 3. END SCREEN -->
-            <div id="end-screen" class="hidden flex-grow flex flex-col items-center justify-center text-center">
+            <section id="end-screen" class="hidden flex-grow flex flex-col items-center justify-center text-center" aria-label="Game Over Screen">
                 <h2 class="cinematic-font text-7xl gold-text mb-4 drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)]">The End</h2>
                 <div class="w-24 h-1.5 bg-gradient-to-r from-transparent via-red-600 to-transparent mb-10"></div>
-                <div class="bg-black/40 p-8 rounded-2xl border border-amber-500/20 w-full max-w-md backdrop-blur-md shadow-2xl">
+
+                <div class="bg-black/40 p-8 rounded-2xl border border-amber-500/20 w-full max-w-md backdrop-blur-md shadow-2xl play-again-anim">
                     <div class="grid grid-cols-2 gap-8 mb-8 divide-x divide-white/10">
                         <div>
                             <p class="text-neutral-400 text-[10px] uppercase font-bold tracking-widest mb-1">Total Score</p>
@@ -264,14 +305,35 @@
                             <p id="final-level" class="text-5xl cinematic-font text-amber-500 drop-shadow-lg">1</p>
                         </div>
                     </div>
-                    <div id="verdict-text" class="text-xl font-medium text-white mb-0 leading-relaxed"></div>
+                    <div id="verdict-text" class="text-xl font-medium text-white mb-4 leading-relaxed"></div>
+
+                    <div class="mt-6 text-left">
+                        <h3 class="text-xs uppercase tracking-widest text-amber-400 mb-2 font-bold">Local Top Scores</h3>
+                        <ul id="leaderboard-list" class="text-sm text-gray-300 space-y-1">
+                            <!-- Leaderboard items -->
+                        </ul>
+                    </div>
                 </div>
-                <div class="flex flex-wrap justify-center gap-4 mt-10">
+
+                <div class="flex flex-wrap justify-center gap-4 mt-8">
                     <button onclick="restartGame()" class="primary-cta px-10 py-3 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-2">
                         <span>🔄</span> Re-Release
                     </button>
                 </div>
-            </div>
+
+                <div class="flex flex-wrap justify-center gap-3 mt-4">
+                    <button onclick="shareWhatsApp()" class="bg-green-600/90 hover:bg-green-500 text-white text-xs font-bold uppercase tracking-widest px-6 py-2 rounded-full flex items-center gap-2">
+                        <span>📲</span> Share on WhatsApp
+                    </button>
+                    <button id="copy-link-btn" onclick="copyLink()" class="bg-neutral-800 hover:bg-neutral-700 text-white text-xs font-bold uppercase tracking-widest px-6 py-2 rounded-full">
+                        Copy Link
+                    </button>
+                </div>
+
+                <div class="mt-6 text-center text-xs text-gray-500">
+                    Made by Tanush · BollyBoli © 2025
+                </div>
+            </section>
         </div>
     </div>
 
@@ -299,12 +361,42 @@
             }
         }
 
+        // --- Simple SFX using Web Audio (no external files) ---
+        let audioCtx = null;
+        function playSfx(type) {
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContext) return;
+                if (!audioCtx) audioCtx = new AudioContext();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                let freq = 440;
+                if (type === 'correct') freq = 880;
+                else if (type === 'wrong') freq = 220;
+                else if (type === 'click') freq = 523.25;
+                else if (type === 'timeout') freq = 150;
+
+                osc.frequency.value = freq;
+                const now = audioCtx.currentTime;
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+
+                osc.start(now);
+                osc.stop(now + 0.2);
+            } catch (e) {
+                // fail silently on old browsers
+            }
+        }
+
         window.onload = function() {
             typeTitle();
             loadProgress(); // Load saved game on startup
         };
 
-        // --- GAME DATA WITH CORRECTED STREAMING LINKS ---
+        // --- GAME DATA (same as before, with fixed question) ---
         const masterQuestionPool = [
             { 
                 d: "Kitne aadmi the?", 
@@ -517,7 +609,7 @@
                 m: "Andaz Apna Apna",
                 s: [
                      { name: "Prime Video", url: "https://www.primevideo.com/search/ref=atv_nb_sr?phrase=Andaz%20Apna%20Apna", color: "bg-blue-500" },
-                     { name: "Netflix", url: "https://www.netflix.com/search?q=Andaz+Apna+Apna", color: "bg-red-600" }
+                     { name: "Netflix", url: "https://www.netflix.com/search?q=Andaz%20Apna%20Apna", color: "bg-red-600" }
                 ]
             }
         ];
@@ -527,6 +619,7 @@
         const START_TIMER = 15; 
         const MIN_TIMER = 5;
         const TIMER_DECREASE_PER_LEVEL = 0.5;
+        const MAX_LIVES = 3;
 
         let currentLevel = 1;
         let questionsThisLevel = 0;
@@ -537,9 +630,11 @@
         let currentTimerDuration = START_TIMER;
         let askedQuestionIndices = [];
         let currentQuestion = null;
-        let startLevelForNextGame = 1; 
-        let previousScreen = 'start';
         let isResume = false;
+        let lives = MAX_LIVES;
+        let leaderboard = [];
+
+        const GAME_URL = window.location.href.split('#')[0];
 
         const screens = {
             start: document.getElementById('start-screen'),
@@ -563,7 +658,11 @@
             questionContainer: document.getElementById('question-container'),
             streamingModal: document.getElementById('streaming-modal'),
             streamingModalMovie: document.getElementById('streaming-modal-movie'),
-            streamingOptions: document.getElementById('streaming-options')
+            streamingOptions: document.getElementById('streaming-options'),
+            livesContainer: document.getElementById('lives-container'),
+            leaderboardList: document.getElementById('leaderboard-list'),
+            mainPanel: document.getElementById('main-panel'),
+            copyLinkBtn: document.getElementById('copy-link-btn')
         };
 
         // --- SAVE SYSTEM ---
@@ -573,31 +672,37 @@
                 questionsThisLevel,
                 totalScore,
                 askedQuestionIndices,
+                lives,
                 isSessionActive: true
             };
-            localStorage.setItem('bollyboli_save_v1', JSON.stringify(data));
+            try {
+                localStorage.setItem('bollyboli_save_v1', JSON.stringify(data));
+            } catch (e) {}
         }
 
         function loadProgress() {
-            const saved = localStorage.getItem('bollyboli_save_v1');
-            if (saved) {
-                const data = JSON.parse(saved);
-                
-                if (data.isSessionActive) {
-                    currentLevel = data.currentLevel;
-                    questionsThisLevel = data.questionsThisLevel;
-                    totalScore = data.totalScore;
-                    askedQuestionIndices = data.askedQuestionIndices || [];
-                    isResume = true;
-                    
-                    const btn = document.getElementById('main-start-btn');
-                    btn.textContent = "RESUME SHOW";
-                    document.getElementById('welcome-text').innerHTML = `
-                        <strong class="text-amber-400">Welcome Back!</strong><br>
-                        Resume where you left off. Level ${currentLevel} • Score ${totalScore}
-                    `;
+            try {
+                const saved = localStorage.getItem('bollyboli_save_v1');
+                if (saved) {
+                    const data = JSON.parse(saved);
+                    if (data.isSessionActive) {
+                        currentLevel = data.currentLevel || 1;
+                        questionsThisLevel = data.questionsThisLevel || 0;
+                        totalScore = data.totalScore || 0;
+                        askedQuestionIndices = data.askedQuestionIndices || [];
+                        lives = data.lives ?? MAX_LIVES;
+                        isResume = true;
+                        
+                        const btn = document.getElementById('main-start-btn');
+                        btn.textContent = "RESUME SHOW";
+                        document.getElementById('welcome-text').innerHTML = `
+                            <strong class="text-amber-400">Welcome Back!</strong><br>
+                            Resume where you left off. Level ${currentLevel} • Score ${totalScore}
+                        `;
+                    }
                 }
-            }
+            } catch (e) {}
+            loadLeaderboardFromStorage();
         }
 
         function resetSession() {
@@ -606,10 +711,85 @@
                 questionsThisLevel: 0,
                 totalScore: 0,
                 askedQuestionIndices: [],
+                lives: MAX_LIVES,
                 isSessionActive: false
             };
-            localStorage.setItem('bollyboli_save_v1', JSON.stringify(data));
+            try {
+                localStorage.setItem('bollyboli_save_v1', JSON.stringify(data));
+            } catch (e) {}
             isResume = false;
+            lives = MAX_LIVES;
+        }
+
+        // --- LEADERBOARD ---
+        function loadLeaderboardFromStorage() {
+            try {
+                const raw = localStorage.getItem('bollyboli_leaderboard_v1');
+                leaderboard = raw ? JSON.parse(raw) : [];
+            } catch (e) {
+                leaderboard = [];
+            }
+        }
+
+        function saveLeaderboardToStorage() {
+            try {
+                localStorage.setItem('bollyboli_leaderboard_v1', JSON.stringify(leaderboard));
+            } catch (e) {}
+        }
+
+        function updateLeaderboard(finalScore, finalLevel) {
+            const entry = {
+                score: finalScore,
+                level: finalLevel,
+                date: new Date().toLocaleDateString()
+            };
+            leaderboard.push(entry);
+            leaderboard.sort((a, b) => b.score - a.score || b.level - a.level);
+            leaderboard = leaderboard.slice(0, 5);
+            saveLeaderboardToStorage();
+            renderLeaderboard();
+        }
+
+        function renderLeaderboard() {
+            if (!els.leaderboardList) return;
+            els.leaderboardList.innerHTML = '';
+            if (!leaderboard.length) {
+                els.leaderboardList.innerHTML = `<li class="text-xs text-gray-500">No scores yet. Play a game to set a record.</li>`;
+                return;
+            }
+            leaderboard.forEach((item, index) => {
+                const li = document.createElement('li');
+                li.textContent = `${index + 1}. Score ${item.score} · Level ${item.level} · ${item.date}`;
+                els.leaderboardList.appendChild(li);
+            });
+        }
+
+        // --- LIVES ---
+        function updateLivesUI() {
+            els.livesContainer.innerHTML = '';
+            for (let i = 0; i < MAX_LIVES; i++) {
+                const span = document.createElement('span');
+                span.textContent = i < lives ? '❤️' : '🖤';
+                span.className = 'heart text-lg';
+                els.livesContainer.appendChild(span);
+            }
+        }
+
+        function loseLife(reasonText) {
+            lives = Math.max(0, lives - 1);
+            updateLivesUI();
+            if (reasonText) {
+                showFeedback(false, reasonText);
+            }
+            if (lives <= 0) {
+                setTimeout(endGame, 1200);
+            } else {
+                setTimeout(() => {
+                    els.postAnswerActions.classList.add('hidden');
+                    loadQuestion();
+                }, 1200);
+            }
+            saveProgress();
         }
 
         function showScreen(screenName) {
@@ -617,26 +797,39 @@
             screens[screenName].classList.remove('hidden');
         }
 
-        function startGame(level = 1) {
+        function handleMainStart() {
+            playSfx('click');
+            startGame();
+        }
+
+        function startGame() {
             if (!isResume) {
                 currentLevel = 1;
                 totalScore = 0;
                 questionsThisLevel = 0;
                 askedQuestionIndices = [];
+                lives = MAX_LIVES;
             }
             
             els.score.textContent = totalScore;
             updateLevelVisuals();
+            updateLivesUI();
             showScreen('quiz');
             loadQuestion();
         }
         
         function restartGame() {
+            playSfx('click');
             resetSession(); 
             currentLevel = 1;
             totalScore = 0;
             questionsThisLevel = 0;
             askedQuestionIndices = [];
+            lives = MAX_LIVES;
+            els.mainPanel.classList.remove('play-again-anim');
+            void els.mainPanel.offsetWidth; // force reflow
+            els.mainPanel.classList.add('play-again-anim');
+            renderLeaderboard();
             startGame(); 
         }
 
@@ -703,9 +896,9 @@
             if (!canAnswer) return;
             canAnswer = false;
             els.questionContainer.classList.add('opacity-50');
-            showFeedback(false, "TIME'S UP!");
             revealAnswers(currentQuestion.c);
-            setTimeout(endGame, 1500);
+            playSfx('timeout');
+            loseLife("TIME'S UP!");
         }
 
         function handleAnswer(selectedIndex, btn, correctIndex) {
@@ -720,13 +913,13 @@
                 btn.style.borderColor = '#10b981'; 
                 btn.style.color = '#10b981';
                 showFeedback(true);
-                
+                playSfx('correct');
                 saveProgress();
-
             } else {
                 btn.style.borderColor = '#ef4444'; 
                 btn.style.color = '#ef4444';
-                showFeedback(false);
+                playSfx('wrong');
+                showFeedback(false, "CUT! -1 life");
             }
 
             revealAnswers(correctIndex);
@@ -739,7 +932,8 @@
             if (isCorrect) {
                 els.nextBtn.classList.remove('hidden');
             } else {
-                setTimeout(endGame, 1500);
+                // Wrong answer: lose life after a moment
+                setTimeout(() => loseLife(), 800);
             }
         }
 
@@ -759,6 +953,7 @@
         }
 
         function nextQuestion() {
+            playSfx('click');
             questionsThisLevel++;
             if (questionsThisLevel === QUESTIONS_PER_LEVEL) {
                 currentLevel++;
@@ -774,6 +969,7 @@
             els.finalScore.textContent = totalScore;
             els.finalLevel.textContent = currentLevel;
             els.verdict.textContent = totalScore > 10 ? "Blockbuster Performance!" : "Flop Show. Try Again.";
+            updateLeaderboard(totalScore, currentLevel);
             showScreen('end');
         }
 
@@ -806,9 +1002,33 @@
         function closeStreamingModal() {
             els.streamingModal.classList.add('hidden');
         }
-        
-        function resizeCanvas() {}
 
+        // --- SHARING ---
+        function shareWhatsApp() {
+            const text = encodeURIComponent(
+                `I scored ${totalScore} in BollyBoli! Can you beat my filmy IQ?\n\nPlay here: ${GAME_URL}`
+            );
+            window.open(`https://wa.me/?text=${text}`, '_blank');
+        }
+
+        function copyLink() {
+            if (!navigator.clipboard) {
+                alert('Link: ' + GAME_URL);
+                return;
+            }
+            navigator.clipboard.writeText(GAME_URL).then(() => {
+                const btn = els.copyLinkBtn;
+                const original = btn.textContent;
+                btn.textContent = 'Copied!';
+                setTimeout(() => {
+                    btn.textContent = original;
+                }, 1200);
+            }).catch(() => {
+                alert('Link: ' + GAME_URL);
+            });
+        }
+
+        function resizeCanvas() {}
     </script>
 </body>
 </html>
