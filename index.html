@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BollyBoli – Bollywood Dialogue Quiz Game</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;500;700&family=Montserrat:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-gold: #ffdb58;
+            --secondary-gold: #d4af37;
+            --cinema-red: #800020; 
+            --bright-red: #ff0033;
+            --glass-bg: rgba(20, 5, 5, 0.85); 
+            --text-main: #ffffff;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #050101;
+            color: var(--text-main);
+            overflow-x: hidden;
+            background-image: radial-gradient(circle at 50% 0%, #6b0f0f 0%, #1a0505 60%, #000000 100%);
+            touch-action: manipulation; 
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        h1, h2, .cinematic-font { 
+            font-family: 'Oswald', sans-serif; 
+            text-transform: uppercase;
+        }
+
+        .gold-text {
+            background: linear-gradient(to bottom, #fff8bd 0%, #ffd700 50%, #d4af37 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.3));
+        }
+
+        /* --- CUSTOM CLAPPERBOARD --- */
+        .clapper-icon {
+            width: 120px;
+            height: 100px;
+            position: relative;
+            display: inline-block;
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
+        }
+
+        .clapper-body {
+            width: 100%;
+            height: 80px;
+            background: #1a1a1a;
+            position: absolute;
+            bottom: 0;
+            border-radius: 4px;
+            border: 2px solid #d4af37;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: rgba(255,255,255,0.3);
+            font-family: 'Oswald', sans-serif;
+            font-size: 10px;
+            letter-spacing: 1px;
+        }
+        
+        .clapper-stick {
+            width: 100%;
+            height: 20px;
+            background: repeating-linear-gradient(-45deg, #fff, #fff 10px, #1a1a1a 10px, #1a1a1a 20px);
+            position: absolute;
+            top: -15px; 
+            left: 0;
+            border-radius: 4px;
+            border: 1px solid #d4af37;
+            transform-origin: 0% 100%; 
+            z-index: 10;
+            animation: snap-action 2.5s infinite;
+        }
+
+        @keyframes snap-action {
+            0% { transform: rotate(0deg); }
+            10% { transform: rotate(-35deg); }
+            40% { transform: rotate(-35deg); }
+            45% { transform: rotate(0deg); }
+            48% { transform: rotate(-5deg); }
+            50% { transform: rotate(0deg); }
+            100% { transform: rotate(0deg); }
+        }
+
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 24px;
+            box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.3), 0 0 40px rgba(220, 38, 38, 0.15), 0 20px 50px -10px rgba(0, 0, 0, 0.9);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .glass-panel::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--cinema-red), var(--primary-gold), var(--cinema-red));
+            z-index: 50;
+        }
+
+        .action-btn {
+            background: linear-gradient(145deg, #2a1a1a, #1a0505);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            color: #ffe4b5;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-3px);
+            background: linear-gradient(145deg, #5e0b0b, #2a0a0a);
+            border-color: var(--primary-gold);
+            color: #fff;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.15);
+        }
+
+        .primary-cta {
+            background: linear-gradient(to bottom, #ffd700, #b8860b);
+            color: #1a0505;
+            font-weight: 800;
+            border: 1px solid #fff;
+            box-shadow: 0 10px 30px -5px rgba(255, 215, 0, 0.4);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .primary-cta:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 40px rgba(255, 215, 0, 0.6);
+            filter: brightness(1.1);
+        }
+
+        .timer-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 99px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .timer-fill {
+            background: linear-gradient(90deg, #ef4444, #f59e0b, #10b981);
+            border-radius: 99px;
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.4);
+            transition: width 0.1s linear;
+        }
+
+        .fade-in-up { animation: fadeInUp 0.8s ease-out forwards; opacity: 0; }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-bounce-in { animation: bounceIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes bounceIn {
+             0% { transform: scale(0.8); opacity: 0; }
+             100% { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6">
+
+    <!-- Ad Slot -->
+    <div class="w-full max-w-4xl h-20 mb-6 hidden md:flex items-center justify-center rounded-xl bg-black/40 border border-amber-500/20 shadow-lg backdrop-blur-sm">
+        <span class="text-xs text-amber-500/50 uppercase tracking-widest">Ad Space</span>
+    </div>
+
+    <!-- Main Game Interface -->
+    <div class="w-full max-w-4xl relative z-10">
+        <div class="glass-panel p-6 md:p-12 min-h-[620px] flex flex-col relative overflow-hidden">
+            
+            <!-- Header -->
+            <div class="flex flex-col items-center justify-center mb-8 z-20">
+                <h1 id="typing-title" class="text-5xl md:text-7xl font-bold tracking-widest gold-text min-h-[1.2em] drop-shadow-2xl"></h1>
+                <div class="h-0.5 w-32 bg-gradient-to-r from-transparent via-red-500 to-transparent mt-2 opacity-80"></div>
+            </div>
+
+            <!-- 1. START SCREEN -->
+            <div id="start-screen" class="flex-grow flex flex-col items-center justify-center text-center fade-in-up" style="animation-delay: 0.2s;">
+                <div class="mb-10 relative group cursor-pointer">
+                    <div class="absolute inset-0 bg-red-600/40 blur-[60px] rounded-full animate-pulse"></div>
+                    <div class="clapper-icon">
+                        <div class="clapper-stick"></div>
+                        <div class="clapper-body">
+                            <div>BOLLY</div>
+                            <div>BOLI</div>
+                        </div>
+                    </div>
+                </div>
+                <p id="welcome-text" class="text-xl text-gray-200 mb-10 max-w-lg font-light leading-relaxed">
+                    <strong class="text-amber-400">Lights. Camera. Action!</strong><br>
+                    Test your Bollywood knowledge. Answer fast.
+                </p>
+                <div class="flex flex-wrap gap-4 w-full max-w-lg justify-center mb-10">
+                    <!-- Store buttons removed -->
+                </div>
+                <button id="main-start-btn" onclick="startGame()" class="primary-cta cinematic-font text-3xl px-16 py-6 rounded-full tracking-wider">
+                    ENTER THEATRE
+                </button>
+            </div>
+
+            <!-- 2. QUIZ SCREEN -->
+            <div id="quiz-screen" class="hidden w-full flex-col h-full">
+                <div class="flex justify-between items-end mb-8 border-b border-white/10 pb-4">
+                    <div>
+                        <span class="text-amber-500/70 text-xs font-bold uppercase tracking-widest block mb-1">Scene</span>
+                        <span id="current-level-name" class="text-2xl text-white cinematic-font drop-shadow-md">Level 1</span>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-amber-500/70 text-xs font-bold uppercase tracking-widest block mb-1">Box Office</span>
+                        <div class="bg-black/40 px-4 py-1 rounded border border-amber-500/30">
+                            <span id="score" class="text-2xl text-amber-400 cinematic-font">0</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="timer-track w-full h-2 mb-12 shadow-inner">
+                    <div id="timer-bar" class="timer-fill h-full w-full"></div>
+                </div>
+                <div id="question-container" class="flex-grow flex flex-col justify-center">
+                    <div class="mb-12 text-center relative">
+                        <span class="absolute -top-6 left-0 text-6xl text-white/10 font-serif">“</span>
+                        <h2 id="dialogue-text" class="text-2xl md:text-4xl font-medium leading-snug text-white drop-shadow-lg px-4 md:px-8">
+                            <!-- Dialogue goes here -->
+                        </h2>
+                        <span class="absolute -bottom-8 right-0 text-6xl text-white/10 font-serif rotate-180">“</span>
+                    </div>
+                    <div id="options-container" class="grid grid-cols-1 md:grid-cols-2 gap-5 w-full">
+                        <!-- Options injected by JS -->
+                    </div>
+                </div>
+                <div class="min-h-[100px] flex flex-col items-center justify-end mt-8">
+                    <div id="feedback-area" class="text-center cinematic-font text-4xl mb-4 h-10 tracking-widest drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]"></div>
+                    <div id="post-answer-actions" class="hidden flex flex-wrap justify-center gap-4 w-full">
+                        <button id="sponsor-link" class="bg-blue-900/80 hover:bg-blue-800 text-blue-100 border border-blue-500/50 px-6 py-3 rounded-lg font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-2">
+                           <span>📺</span> Stream Now
+                        </button>
+                        <button id="next-btn" onclick="nextQuestion()" class="primary-cta px-10 py-3 rounded-full text-sm uppercase tracking-widest shadow-lg">
+                            Next Scene →
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. END SCREEN -->
+            <div id="end-screen" class="hidden flex-grow flex flex-col items-center justify-center text-center">
+                <h2 class="cinematic-font text-7xl gold-text mb-4 drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)]">The End</h2>
+                <div class="w-24 h-1.5 bg-gradient-to-r from-transparent via-red-600 to-transparent mb-10"></div>
+                <div class="bg-black/40 p-8 rounded-2xl border border-amber-500/20 w-full max-w-md backdrop-blur-md shadow-2xl">
+                    <div class="grid grid-cols-2 gap-8 mb-8 divide-x divide-white/10">
+                        <div>
+                            <p class="text-neutral-400 text-[10px] uppercase font-bold tracking-widest mb-1">Total Score</p>
+                            <p id="final-score" class="text-5xl cinematic-font text-white drop-shadow-lg">0</p>
+                        </div>
+                        <div>
+                            <p class="text-neutral-400 text-[10px] uppercase font-bold tracking-widest mb-1">Level</p>
+                            <p id="final-level" class="text-5xl cinematic-font text-amber-500 drop-shadow-lg">1</p>
+                        </div>
+                    </div>
+                    <div id="verdict-text" class="text-xl font-medium text-white mb-0 leading-relaxed"></div>
+                </div>
+                <div class="flex flex-wrap justify-center gap-4 mt-10">
+                    <button onclick="restartGame()" class="primary-cta px-10 py-3 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-2">
+                        <span>🔄</span> Re-Release
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Streaming Modal -->
+    <div id="streaming-modal" class="fixed inset-0 bg-black/95 backdrop-blur-lg z-50 hidden flex items-center justify-center p-4">
+        <div class="glass-panel w-full max-w-sm p-8 relative border-t-4 border-blue-500 animate-bounce-in">
+            <h3 class="cinematic-font text-2xl text-white mb-2">Watch Now</h3>
+            <p class="text-xs text-blue-400/80 mb-6 uppercase tracking-widest font-bold" id="streaming-modal-movie">Select Platform</p>
+            <div id="streaming-options" class="space-y-3"></div>
+            <button onclick="closeStreamingModal()" class="mt-8 text-gray-500 hover:text-white text-xs font-bold uppercase tracking-widest w-full py-3 border border-gray-800 hover:border-gray-600 rounded transition-all">Close</button>
+        </div>
+    </div>
+
+    <script>
+        // --- Typing Animation Logic ---
+        const titleText = "BOLLYBOLI";
+        const titleElement = document.getElementById('typing-title');
+        let charIndex = 0;
+
+        function typeTitle() {
+            if (charIndex < titleText.length) {
+                titleElement.textContent += titleText.charAt(charIndex);
+                charIndex++;
+                setTimeout(typeTitle, 150); 
+            }
+        }
+
+        window.onload = function() {
+            typeTitle();
+            loadProgress(); // Load saved game on startup
+        };
+
+        // --- GAME DATA WITH CORRECTED STREAMING LINKS ---
+        const masterQuestionPool = [
+            { 
+                d: "Kitne aadmi the?", 
+                o: ["Sholay", "Deewar", "Don", "Lagaan"], 
+                c: 0, 
+                m: "Sholay",
+                s: [
+                    { name: "Prime Video", url: "https://www.primevideo.com/detail/Sholay/0L83ECX16050670/", color: "bg-blue-500" }
+                ]
+            },
+            { 
+                d: "Jaa Simran jaa, jee le apni zindagi.", 
+                o: ["KKHH", "DDLJ", "Mohabbatein", "K3G"], 
+                c: 1, 
+                m: "Dilwale Dulhania Le Jayenge",
+                s: [
+                    { name: "Prime Video", url: "https://www.primevideo.com/detail/Dilwale-Dulhania-Le-Jayenge/0IV6427666666/", color: "bg-blue-500" },
+                    { name: "Netflix", url: "https://www.netflix.com/search?q=Dilwale%20Dulhania%20Le%20Jayenge", color: "bg-red-600" }
+                ]
+            },
+            { 
+                d: "Mere paas maa hai.", 
+                o: ["Trishul", "Shakti", "Deewar", "Zanjeer"], 
+                c: 2, 
+                m: "Deewar",
+                s: [
+                    { name: "ZEE5", url: "https://www.zee5.com/movies/details/deewaar/0-0-movie_1376750373", color: "bg-purple-700" }
+                ]
+            },
+            { 
+                d: "Mogambo khush hua.", 
+                o: ["Mr. India", "Shaan", "Karma", "Tezaab"], 
+                c: 0, 
+                m: "Mr. India",
+                s: [
+                    { name: "ZEE5", url: "https://www.zee5.com/movies/details/mr-india/0-0-16639", color: "bg-purple-700" }
+                ]
+            },
+            { 
+                d: "Picture abhi baaki hai mere dost.", 
+                o: ["OSO", "HNY", "Chennai Express", "Main Hoon Na"], 
+                c: 0, 
+                m: "Om Shanti Om",
+                s: [
+                    { name: "Netflix", url: "https://www.netflix.com/title/70085604", color: "bg-red-600" }
+                ]
+            },
+            { 
+                d: "Crime Master Gogo naam hai mera, aankhen nikal ke gotiyan khelta hoon.", 
+                o: ["Andaz Apna Apna", "Raja Babu", "Coolie No. 1", "Judwaa"], 
+                c: 0, 
+                m: "Andaz Apna Apna",
+                s: [
+                    { name: "Prime Video", url: "https://www.primevideo.com/search/ref=atv_nb_sr?phrase=Andaz%20Apna%20Apna", color: "bg-blue-500" },
+                    { name: "Netflix", url: "https://www.netflix.com/search?q=Andaz%20Apna%20Apna", color: "bg-red-600" }
+                ]
+            },
+            { 
+                d: "Hum tum mein itne ched karenge ki confuse ho jaoge ki saans kahan se le...", 
+                o: ["Wanted", "Dabangg", "Singham", "Ghajini"], 
+                c: 1, 
+                m: "Dabangg",
+                s: [
+                     { name: "Hotstar", url: "https://www.hotstar.com/in/movies/dabangg/1000000000", color: "bg-blue-900" },
+                     { name: "Netflix", url: "https://www.netflix.com/search?q=Dabangg", color: "bg-red-600" }
+                ]
+            },
+            { 
+                d: "Tareekh pe tareekh, tareekh pe tareekh milta rahi hai, lekin insaaf nahi mila my lord!", 
+                o: ["Ghayal", "Damini", "Ghatak", "Ziddi"], 
+                c: 1, 
+                m: "Damini",
+                s: [
+                    { name: "Netflix", url: "https://www.netflix.com/search?q=Damini", color: "bg-red-600" }
+                ]
+            },
+            { 
+                d: "I love you Kkkkk... Kiran.", 
+                o: ["Baazigar", "Darr", "Anjaam", "Karan Arjun"], 
+                c: 1, 
+                m: "Darr",
+                s: [
+                    { name: "Netflix", url: "https://www.netflix.com/search?q=Darr", color: "bg-red-600" },
+                    { name: "Prime Video", url: "https://www.primevideo.com/search/ref=atv_nb_sr?phrase=Darr", color: "bg-blue-500" }
+                ]
+            },
+            { 
+                d: "Don't underestimate the power of a common man.", 
+                o: ["Singham", "A Wednesday", "Nayak", "Chennai Express"], 
+                c: 3, 
+                m: "Chennai Express",
+                s: [
+                    { name: "Netflix", url: "https://www.netflix.com/title/70254350", color: "bg-red-600" },
+                    { name: "Hotstar", url: "https://www.hotstar.com/in/movies/chennai-express/1000000000", color: "bg-blue-900" }
+                ]
+            },
+            { 
+                d: "Saala yeh dukh kaahe khatam nahi hota bey?", 
+                o: ["Masaan", "Udaan", "Gangs of Wasseypur", "Haider"], 
+                c: 0, 
+                m: "Masaan",
+                s: [
+                     { name: "Hotstar", url: "https://www.hotstar.com/in/movies/masaan/1000000000", color: "bg-blue-900" },
+                     { name: "Netflix", url: "https://www.netflix.com/search?q=Masaan", color: "bg-red-600" }
+                ]
+            },
+            { 
+                d: "Teja main hoon, mark idhar hai.", 
+                o: ["Andaz Apna Apna", "Hera Pheri", "Jaane Bhi Do Yaaro", "Chamatkar"], 
+                c: 0, 
+                m: "Andaz Apna Apna",
+                s: [
+                    { name: "Prime Video", url: "https://www.primevideo.com/search/ref=atv_nb_sr?phrase=Andaz%20Apna%20Apna", color: "bg-blue-500" },
+                    { name: "Netflix", url: "https://www.netflix.com/search?q=Andaz%20Apna%20Apna", color: "bg-red-600" }
+                ]
+            },
+            { 
+                d: "How's the josh?", 
+                o: ["Lakshya", "Border", "Uri: The Surgical Strike", "Holiday"], 
+                c: 2, 
+                m: "Uri: The Surgical Strike",
+                s: [
+                    { name: "ZEE5", url: "https://www.zee5.com/movies/details/uri-the-surgical-strike/0-0-movie_1809757735", color: "bg-purple-700" }
+                ]
+            },
+            { 
+                d: "All izz well.", 
+                o: ["PK", "Lage Raho Munna Bhai", "3 Idiots", "Munna Bhai M.B.B.S."], 
+                c: 2, 
+                m: "3 Idiots",
+                s: [
+                    { name: "Netflix", url: "https://www.netflix.com/title/70121522", color: "bg-red-600" },
+                    { name: "Prime Video", url: "https://www.primevideo.com/search/ref=atv_nb_sr?phrase=3%20Idiots", color: "bg-blue-500" },
+                    { name: "SonyLIV", url: "https://www.sonyliv.com/search/3%20Idiots", color: "bg-indigo-500" }
+                ]
+            },
+            { 
+                d: "Thappad se darr nahi lagta saab, pyaar se lagta hai.", 
+                o: ["Dabangg", "Singham", "Wanted", "Rowdy Rathore"], 
+                c: 0, 
+                m: "Dabangg",
+                s: [
+                    { name: "Hotstar", url: "https://www.hotstar.com/in/movies/dabangg/1000000000", color: "bg-blue-900" },
+                    { name: "Netflix", url: "https://www.netflix.com/search?q=Dabangg", color: "bg-red-600" }
+                ]
+            },
+            { 
+                d: "Tumse na ho payega.", 
+                o: ["Masaan", "Udaan", "Gangs of Wasseypur", "Haider"], 
+                c: 2, 
+                m: "Gangs of Wasseypur",
+                s: [
+                     { name: "Netflix", url: "https://www.netflix.com/title/70254344", color: "bg-red-600" },
+                     { name: "Prime Video", url: "https://www.primevideo.com/search?q=Gangs%20of%20Wasseypur", color: "bg-blue-500" }
+                ]
+            },
+            { 
+                d: "Aata majhi satakli.", 
+                o: ["Dabangg", "Singham", "Simmba", "Singham Returns"], 
+                c: 1, 
+                m: "Singham",
+                s: [
+                    { name: "Hotstar", url: "https://www.hotstar.com/in/movies/singham/1000000000", color: "bg-blue-900" },
+                    { name: "Netflix", url: "https://www.netflix.com/search?q=Singham", color: "bg-red-600" }
+                ]
+            },
+             { 
+                d: "Don ko pakadna mushkil hi nahi, namumkin hai.", 
+                o: ["Don (1978)", "Don (2006)", "Don 2", "Deewar"], 
+                c: 0, 
+                m: "Don (1978)",
+                s: [
+                    { name: "ZEE5", url: "https://www.zee5.com/movies/details/don/0-0-2532", color: "bg-purple-700" },
+                    { name: "Netflix", url: "https://www.netflix.com/search?q=Don", color: "bg-red-600" }
+                ]
+            },
+            { 
+                d: "Utha le re baba... utha le... mereko nahi re, in dono ko.", 
+                o: ["Hera Pheri", "Phir Hera Pheri", "Bhagam Bhag", "Garam Masala"], 
+                c: 0, 
+                m: "Hera Pheri",
+                s: [
+                    { name: "Prime Video", url: "https://www.primevideo.com/search/ref=atv_nb_sr?phrase=Hera%20Pheri", color: "bg-blue-500" },
+                    { name: "YouTube", url: "https://www.youtube.com/results?search_query=Hera+Pheri+Full+Movie", color: "bg-red-500" }
+                ]
+            },
+             { 
+                d: "22 tak padhai, 25 pe naukri, 26 pe chokri, 30 pe bachche, 60 pe retirement...", 
+                o: ["3 Idiots", "Wake Up Sid", "Tamasha", "Yeh Jawaani Hai Deewani"], 
+                c: 3, 
+                m: "Yeh Jawaani Hai Deewani",
+                s: [
+                    { name: "Netflix", url: "https://www.netflix.com/title/70273635", color: "bg-red-600" },
+                    { name: "Prime Video", url: "https://www.primevideo.com/search?q=Yeh+Jawaani+Hai+Deewani", color: "bg-blue-500" }
+                ]
+            },
+            {
+                d: "Kutte, kameene, main tera khoon pee jaunga!", 
+                o: ["Dharmatma", "Yaadon Ki Baaraat", "Sholay", "Zanjeer"], 
+                c: 1, 
+                m: "Yaadon Ki Baaraat",
+                s: [
+                    { name: "ZEE5", url: "https://www.zee5.com/movies/details/yaadon-ki-baaraat/0-0-7307", color: "bg-purple-700" }
+                ]
+            },
+            {
+                d: "Aap purush hi nahi... mahapurush hain.", 
+                o: ["Andaz Apna Apna", "Gol Maal", "Chupke Chupke", "Padosan"], 
+                c: 0,
+                m: "Andaz Apna Apna",
+                s: [
+                     { name: "Prime Video", url: "https://www.primevideo.com/search/ref=atv_nb_sr?phrase=Andaz%20Apna%20Apna", color: "bg-blue-500" },
+                     { name: "Netflix", url: "https://www.netflix.com/search?q=Andaz+Apna+Apna", color: "bg-red-600" }
+                ]
+            }
+        ];
+
+        // --- STATE ---
+        const QUESTIONS_PER_LEVEL = 5;
+        const START_TIMER = 15; 
+        const MIN_TIMER = 5;
+        const TIMER_DECREASE_PER_LEVEL = 0.5;
+
+        let currentLevel = 1;
+        let questionsThisLevel = 0;
+        let totalScore = 0;
+        let canAnswer = false;
+        let timerInterval;
+        let timeLeft;
+        let currentTimerDuration = START_TIMER;
+        let askedQuestionIndices = [];
+        let currentQuestion = null;
+        let startLevelForNextGame = 1; 
+        let previousScreen = 'start';
+        let isResume = false;
+
+        const screens = {
+            start: document.getElementById('start-screen'),
+            quiz: document.getElementById('quiz-screen'),
+            end: document.getElementById('end-screen')
+        };
+        
+        const els = {
+            curLevelName: document.getElementById('current-level-name'),
+            score: document.getElementById('score'),
+            timerBar: document.getElementById('timer-bar'),
+            dialogue: document.getElementById('dialogue-text'),
+            options: document.getElementById('options-container'),
+            feedback: document.getElementById('feedback-area'),
+            postAnswerActions: document.getElementById('post-answer-actions'),
+            sponsorLink: document.getElementById('sponsor-link'),
+            nextBtn: document.getElementById('next-btn'),
+            finalScore: document.getElementById('final-score'),
+            finalLevel: document.getElementById('final-level'),
+            verdict: document.getElementById('verdict-text'),
+            questionContainer: document.getElementById('question-container'),
+            streamingModal: document.getElementById('streaming-modal'),
+            streamingModalMovie: document.getElementById('streaming-modal-movie'),
+            streamingOptions: document.getElementById('streaming-options')
+        };
+
+        // --- SAVE SYSTEM ---
+        function saveProgress() {
+            const data = {
+                currentLevel,
+                questionsThisLevel,
+                totalScore,
+                askedQuestionIndices,
+                isSessionActive: true
+            };
+            localStorage.setItem('bollyboli_save_v1', JSON.stringify(data));
+        }
+
+        function loadProgress() {
+            const saved = localStorage.getItem('bollyboli_save_v1');
+            if (saved) {
+                const data = JSON.parse(saved);
+                
+                if (data.isSessionActive) {
+                    currentLevel = data.currentLevel;
+                    questionsThisLevel = data.questionsThisLevel;
+                    totalScore = data.totalScore;
+                    askedQuestionIndices = data.askedQuestionIndices || [];
+                    isResume = true;
+                    
+                    const btn = document.getElementById('main-start-btn');
+                    btn.textContent = "RESUME SHOW";
+                    document.getElementById('welcome-text').innerHTML = `
+                        <strong class="text-amber-400">Welcome Back!</strong><br>
+                        Resume where you left off. Level ${currentLevel} • Score ${totalScore}
+                    `;
+                }
+            }
+        }
+
+        function resetSession() {
+            const data = {
+                currentLevel: 1,
+                questionsThisLevel: 0,
+                totalScore: 0,
+                askedQuestionIndices: [],
+                isSessionActive: false
+            };
+            localStorage.setItem('bollyboli_save_v1', JSON.stringify(data));
+            isResume = false;
+        }
+
+        function showScreen(screenName) {
+            Object.values(screens).forEach(s => s.classList.add('hidden'));
+            screens[screenName].classList.remove('hidden');
+        }
+
+        function startGame(level = 1) {
+            if (!isResume) {
+                currentLevel = 1;
+                totalScore = 0;
+                questionsThisLevel = 0;
+                askedQuestionIndices = [];
+            }
+            
+            els.score.textContent = totalScore;
+            updateLevelVisuals();
+            showScreen('quiz');
+            loadQuestion();
+        }
+        
+        function restartGame() {
+            resetSession(); 
+            currentLevel = 1;
+            totalScore = 0;
+            questionsThisLevel = 0;
+            askedQuestionIndices = [];
+            startGame(); 
+        }
+
+        function updateLevelVisuals() {
+            els.curLevelName.textContent = `Level ${currentLevel}`;
+            currentTimerDuration = Math.max(MIN_TIMER, START_TIMER - (currentLevel - 1) * TIMER_DECREASE_PER_LEVEL);
+        }
+
+        function loadQuestion() {
+            clearInterval(timerInterval);
+            canAnswer = true;
+            els.nextBtn.classList.add('hidden');
+            els.postAnswerActions.classList.add('hidden');
+            els.feedback.textContent = '';
+            els.questionContainer.classList.remove('opacity-50');
+            
+            if (askedQuestionIndices.length === masterQuestionPool.length) {
+                askedQuestionIndices = []; 
+            }
+
+            let qIndex;
+            do {
+                qIndex = Math.floor(Math.random() * masterQuestionPool.length);
+            } while (askedQuestionIndices.includes(qIndex));
+            
+            askedQuestionIndices.push(qIndex);
+            currentQuestion = masterQuestionPool[qIndex];
+
+            els.dialogue.textContent = `"${currentQuestion.d}"`;
+            els.options.innerHTML = '';
+            
+            currentQuestion.o.forEach((opt, i) => {
+                const btn = document.createElement('button');
+                btn.className = `action-btn w-full text-left p-5 rounded-lg text-lg font-medium`;
+                btn.textContent = opt;
+                btn.onclick = () => handleAnswer(i, btn, currentQuestion.c);
+                els.options.appendChild(btn);
+            });
+
+            startTimer(currentTimerDuration);
+        }
+
+        function startTimer(seconds) {
+            timeLeft = seconds;
+            updateTimerVisuals(100); 
+            
+            timerInterval = setInterval(() => {
+                timeLeft -= 0.1;
+                const percent = (timeLeft / seconds) * 100;
+                updateTimerVisuals(percent);
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    handleTimeout();
+                }
+            }, 100);
+        }
+
+        function updateTimerVisuals(percent) {
+            els.timerBar.style.width = `${Math.max(0, percent)}%`;
+        }
+
+        function handleTimeout() {
+            if (!canAnswer) return;
+            canAnswer = false;
+            els.questionContainer.classList.add('opacity-50');
+            showFeedback(false, "TIME'S UP!");
+            revealAnswers(currentQuestion.c);
+            setTimeout(endGame, 1500);
+        }
+
+        function handleAnswer(selectedIndex, btn, correctIndex) {
+            if (!canAnswer) return;
+            canAnswer = false;
+            clearInterval(timerInterval);
+
+            const isCorrect = selectedIndex === correctIndex;
+            if (isCorrect) {
+                totalScore++;
+                els.score.textContent = totalScore;
+                btn.style.borderColor = '#10b981'; 
+                btn.style.color = '#10b981';
+                showFeedback(true);
+                
+                saveProgress();
+
+            } else {
+                btn.style.borderColor = '#ef4444'; 
+                btn.style.color = '#ef4444';
+                showFeedback(false);
+            }
+
+            revealAnswers(correctIndex);
+
+            els.sponsorLink.onclick = () => openStreamingModal(currentQuestion);
+            els.sponsorLink.removeAttribute('href');
+            
+            els.postAnswerActions.classList.remove('hidden');
+            
+            if (isCorrect) {
+                els.nextBtn.classList.remove('hidden');
+            } else {
+                setTimeout(endGame, 1500);
+            }
+        }
+
+        function revealAnswers(correctIndex) {
+            Array.from(els.options.children).forEach((btn, i) => {
+                btn.disabled = true;
+                if (i === correctIndex) {
+                    btn.style.borderColor = '#10b981';
+                    btn.style.color = '#10b981';
+                }
+            });
+        }
+
+        function showFeedback(isCorrect, text) {
+            els.feedback.textContent = text || (isCorrect ? "EXCELLENT!" : "CUT!");
+            els.feedback.className = `text-center cinematic-font text-3xl mb-4 h-8 tracking-widest ${isCorrect ? 'text-emerald-400' : 'text-rose-500'}`;
+        }
+
+        function nextQuestion() {
+            questionsThisLevel++;
+            if (questionsThisLevel === QUESTIONS_PER_LEVEL) {
+                currentLevel++;
+                questionsThisLevel = 0;
+                updateLevelVisuals();
+            }
+            saveProgress(); 
+            loadQuestion();
+        }
+
+        function endGame() {
+            resetSession(); 
+            els.finalScore.textContent = totalScore;
+            els.finalLevel.textContent = currentLevel;
+            els.verdict.textContent = totalScore > 10 ? "Blockbuster Performance!" : "Flop Show. Try Again.";
+            showScreen('end');
+        }
+
+        // --- STREAMING MODAL ---
+        function openStreamingModal(questionData) {
+            const movieName = questionData.m;
+            const streamingLinks = questionData.s; 
+            
+            els.streamingModalMovie.textContent = `Watch ${movieName}`;
+            
+            if (streamingLinks && streamingLinks.length > 0) {
+                els.streamingOptions.innerHTML = streamingLinks.map(opt => `
+                    <a href="${opt.url}" target="_blank" class="${opt.color} w-full block text-center text-white font-bold py-3 rounded text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
+                        <span>▶</span> Watch on ${opt.name}
+                    </a>
+                `).join('');
+            } else {
+                const encodedName = encodeURIComponent(movieName);
+                els.streamingOptions.innerHTML = `
+                    <a href="https://www.youtube.com/results?search_query=${encodedName}+full+movie" target="_blank" class="bg-red-500 w-full block text-center text-white font-bold py-3 rounded text-sm hover:opacity-90 transition-opacity">
+                        Search on YouTube
+                    </a>
+                    <p class="text-xs text-gray-500 text-center mt-2">Specific streaming links not found for this title.</p>
+                `;
+            }
+
+            els.streamingModal.classList.remove('hidden');
+        }
+
+        function closeStreamingModal() {
+            els.streamingModal.classList.add('hidden');
+        }
+        
+        function resizeCanvas() {}
+
+    </script>
+</body>
+</html>
