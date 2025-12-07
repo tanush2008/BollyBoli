@@ -203,9 +203,7 @@
             
             <!-- Header -->
             <header class="flex flex-col items-center justify-center mb-8 z-20 text-center">
-                <h1 id="typing-title" class="text-5xl md:text-7xl font-bold tracking-widest gold-text min-h-[1.2em] drop-shadow-2xl">
-                    <!-- Typing -->
-                </h1>
+                <h1 id="typing-title" class="text-5xl md:text-7xl font-bold tracking-widest gold-text min-h-[1.2em] drop-shadow-2xl"></h1>
                 <p class="mt-2 text-sm text-amber-200/70 tracking-[0.25em] uppercase">
                     Bollywood Dialogue Quiz
                 </p>
@@ -234,7 +232,7 @@
                 </button>
 
                 <div class="mt-8 text-xs text-gray-400">
-                    Local device leaderboard is saved on your browser only.
+                    Highest unlocked level and used dialogues are saved on this device.
                 </div>
             </main>
 
@@ -309,9 +307,7 @@
 
                     <div class="mt-6 text-left">
                         <h3 class="text-xs uppercase tracking-widest text-amber-400 mb-2 font-bold">Local Top Scores</h3>
-                        <ul id="leaderboard-list" class="text-sm text-gray-300 space-y-1">
-                            <!-- Leaderboard items -->
-                        </ul>
+                        <ul id="leaderboard-list" class="text-sm text-gray-300 space-y-1"></ul>
                     </div>
                 </div>
 
@@ -386,9 +382,7 @@
 
                 osc.start(now);
                 osc.stop(now + 0.2);
-            } catch (e) {
-                // fail silently on old browsers
-            }
+            } catch (e) {}
         }
 
         window.onload = function() {
@@ -633,6 +627,7 @@
         let isResume = false;
         let lives = MAX_LIVES;
         let leaderboard = [];
+        let highestLevelUnlocked = 1;
 
         const GAME_URL = window.location.href.split('#')[0];
 
@@ -667,13 +662,17 @@
 
         // --- SAVE SYSTEM ---
         function saveProgress() {
+            // Always keep highest unlocked up to date
+            highestLevelUnlocked = Math.max(highestLevelUnlocked, currentLevel);
+
             const data = {
                 currentLevel,
                 questionsThisLevel,
                 totalScore,
                 askedQuestionIndices,
                 lives,
-                isSessionActive: true
+                isSessionActive: true,
+                highestLevelUnlocked
             };
             try {
                 localStorage.setItem('bollyboli_save_v1', JSON.stringify(data));
@@ -685,6 +684,10 @@
                 const saved = localStorage.getItem('bollyboli_save_v1');
                 if (saved) {
                     const data = JSON.parse(saved);
+                    if (data.highestLevelUnlocked) {
+                        highestLevelUnlocked = data.highestLevelUnlocked;
+                    }
+                    // session resume
                     if (data.isSessionActive) {
                         currentLevel = data.currentLevel || 1;
                         questionsThisLevel = data.questionsThisLevel || 0;
@@ -703,16 +706,20 @@
                 }
             } catch (e) {}
             loadLeaderboardFromStorage();
+            renderLeaderboard();
         }
 
         function resetSession() {
+            // We DO NOT clear askedQuestionIndices or highestLevelUnlocked:
+            // that way, dialogues never repeat and highest level stays.
             const data = {
-                currentLevel: 1,
+                currentLevel: highestLevelUnlocked,
                 questionsThisLevel: 0,
                 totalScore: 0,
-                askedQuestionIndices: [],
+                askedQuestionIndices,
                 lives: MAX_LIVES,
-                isSessionActive: false
+                isSessionActive: false,
+                highestLevelUnlocked
             };
             try {
                 localStorage.setItem('bollyboli_save_v1', JSON.stringify(data));
@@ -782,7 +789,7 @@
                 showFeedback(false, reasonText);
             }
             if (lives <= 0) {
-                setTimeout(endGame, 1200);
+                setTimeout(() => endGame(false), 1200);
             } else {
                 setTimeout(() => {
                     els.postAnswerActions.classList.add('hidden');
@@ -792,6 +799,7 @@
             saveProgress();
         }
 
+        // --- SCREEN HELPERS ---
         function showScreen(screenName) {
             Object.values(screens).forEach(s => s.classList.add('hidden'));
             screens[screenName].classList.remove('hidden');
@@ -804,10 +812,10 @@
 
         function startGame() {
             if (!isResume) {
-                currentLevel = 1;
+                // Start at the highest level the player has ever reached
+                currentLevel = highestLevelUnlocked || 1;
                 totalScore = 0;
                 questionsThisLevel = 0;
-                askedQuestionIndices = [];
                 lives = MAX_LIVES;
             }
             
@@ -821,15 +829,13 @@
         function restartGame() {
             playSfx('click');
             resetSession(); 
-            currentLevel = 1;
+            currentLevel = highestLevelUnlocked || 1;
             totalScore = 0;
             questionsThisLevel = 0;
-            askedQuestionIndices = [];
             lives = MAX_LIVES;
             els.mainPanel.classList.remove('play-again-anim');
-            void els.mainPanel.offsetWidth; // force reflow
+            void els.mainPanel.offsetWidth;
             els.mainPanel.classList.add('play-again-anim');
-            renderLeaderboard();
             startGame(); 
         }
 
@@ -846,8 +852,11 @@
             els.feedback.textContent = '';
             els.questionContainer.classList.remove('opacity-50');
             
-            if (askedQuestionIndices.length === masterQuestionPool.length) {
-                askedQuestionIndices = []; 
+            // If we've used every dialogue in the pool, end the game
+            if (askedQuestionIndices.length >= masterQuestionPool.length) {
+                showFeedback(true, "You’ve answered all dialogues!");
+                setTimeout(() => endGame(true), 1200);
+                return;
             }
 
             let qIndex;
@@ -932,7 +941,6 @@
             if (isCorrect) {
                 els.nextBtn.classList.remove('hidden');
             } else {
-                // Wrong answer: lose life after a moment
                 setTimeout(() => loseLife(), 800);
             }
         }
@@ -958,18 +966,31 @@
             if (questionsThisLevel === QUESTIONS_PER_LEVEL) {
                 currentLevel++;
                 questionsThisLevel = 0;
+                highestLevelUnlocked = Math.max(highestLevelUnlocked, currentLevel);
                 updateLevelVisuals();
             }
             saveProgress(); 
             loadQuestion();
         }
 
-        function endGame() {
+        function endGame(allCleared) {
+            const finalScoreVal = totalScore;
+            const finalLevelVal = currentLevel;
+
             resetSession(); 
-            els.finalScore.textContent = totalScore;
-            els.finalLevel.textContent = currentLevel;
-            els.verdict.textContent = totalScore > 10 ? "Blockbuster Performance!" : "Flop Show. Try Again.";
-            updateLeaderboard(totalScore, currentLevel);
+
+            els.finalScore.textContent = finalScoreVal;
+            els.finalLevel.textContent = finalLevelVal;
+
+            if (allCleared) {
+                els.verdict.textContent = "You’ve completed every dialogue in this version of BollyBoli. Filmy legend!";
+            } else {
+                els.verdict.textContent = finalScoreVal > 10 
+                    ? "Blockbuster Performance!" 
+                    : "Flop Show. Try Again from your highest level.";
+            }
+
+            updateLeaderboard(finalScoreVal, finalLevelVal);
             showScreen('end');
         }
 
